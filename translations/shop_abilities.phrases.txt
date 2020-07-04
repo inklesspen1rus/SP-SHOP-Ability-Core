@@ -1,0 +1,33 @@
+"Phrases"
+{
+	"speed"
+	{
+		"ru"			"Скорость"
+		"en"			"Speed"
+	}
+	"gravity"
+	{
+		"ru"			"Гравитация"
+		"en"			"Gravity"
+	}
+	"hp"
+	{
+		"ru"			"HP"
+		"en"			"HP"
+	}
+	"armor"
+	{
+		"ru"			"Броня"
+		"en"			"Armor"
+	}
+	"regen"
+	{
+		"ru"			"Реген"
+		"en"			"Regen"
+	}
+	"credits"
+	{
+		"ru"			"Умножение"
+		"en"			"Multiplier"
+	}
+}
