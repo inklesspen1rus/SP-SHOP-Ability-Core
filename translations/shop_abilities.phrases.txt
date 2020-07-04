@@ -10,24 +10,29 @@
 		"ru"			"Гравитация"
 		"en"			"Gravity"
 	}
-	"hp"
+	"health"
 	{
-		"ru"			"HP"
-		"en"			"HP"
+		"ru"			"Здоровье"
+		"en"			"Health"
 	}
 	"armor"
 	{
 		"ru"			"Броня"
 		"en"			"Armor"
 	}
-	"regen"
+	"regen_hp"
 	{
-		"ru"			"Реген"
-		"en"			"Regen"
+		"ru"			"Регенерация HP"
+		"en"			"HP Regeneration"
+	}
+	"regen_armor"
+	{
+		"ru"			"Регенерация брони"
+		"en"			"Armor Regeneration"
 	}
 	"credits"
 	{
-		"ru"			"Умножение"
-		"en"			"Multiplier"
+		"ru"			"Кредиты"
+		"en"			"Credits"
 	}
 }
