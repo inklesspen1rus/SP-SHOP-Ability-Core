@@ -4,7 +4,7 @@ public Plugin myinfo = {
 	name = "[SHOP] Abilities Core 2",
 	author = "inklesspen",
 	description = "Fully rewrited and new-styled code abilities core",
-	version = "0.1"
+	version = "2.0a"
 }
 
 GlobalForward fwOnAttributeChange
@@ -24,16 +24,21 @@ public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int max)
 	RegPluginLibrary("abilities2")
 	
 	CreateNative("Abilities2_RegisterAttribute", Native_Register)
-	CreateNative("Abilities2_RemoveAttribute", Native_Remove)
 	CreateNative("Abilities2_GetClientAttribute", Native_GetClientAttribute)
 }
 
 public any Native_GetClientAttribute(Handle plugin, int num)
 {
 	int client = GetNativeCell(1)
-	if(IsClientConnected(client))
+	if(!IsClientConnected(client))
 	{
 		ThrowNativeError(0, "Client#%i is not connected", client)
+		return 0
+	}
+	
+	if(IsFakeClient(client))
+	{
+		ThrowNativeError(0, "Client#%i is bot", client)
 		return 0
 	}
 	
@@ -55,10 +60,7 @@ public any Native_Register(Handle plugin, int num)
 	int index
 	GetNativeString(1, sBuffer, sizeof sBuffer)
 	if(gAttributeNameMap.GetValue(sBuffer, index))
-	{
-		ThrowNativeError(0, "Attribute \"%s\" already exists", sBuffer)
-		return -1
-	}
+		return index
 	
 	int type = GetNativeCell(2)
 	
@@ -88,8 +90,9 @@ public any Native_Register(Handle plugin, int num)
 	// Calculate values for players
 	for(int i = MaxClients;i;i--)
 	{
-		if(IsClientConnected(i))
+		if(IsClientConnected(i) && !IsFakeClient(i))
 		{
+			
 			value = 0
 			if(Shop_IsAuthorized(i))
 			{
@@ -107,7 +110,7 @@ public any Native_Register(Handle plugin, int num)
 			}
 			gAttributeValues[i].Push(value)
 			if(value)
-				AttrubiteChanged(sBuffer, i, 0, value)
+				AttrubiteChanged(sBuffer, i, 0, value, type)
 		}
 	}
 	items.Close()
@@ -116,6 +119,8 @@ public any Native_Register(Handle plugin, int num)
 
 public void OnClientConnected(int client)
 {
+	if(IsFakeClient(client))
+		return
 	if(gAttributeValues[client])
 		gAttributeValues[client].Close()
 	gAttributeValues[client] = new ArrayList(1)
@@ -123,30 +128,12 @@ public void OnClientConnected(int client)
 		gAttributeValues[client].Push(0)
 }
 
-public any Native_Remove(Handle plugin, int num)
-{
-	char sBuffer[32]
-	GetNativeString(1, sBuffer, sizeof sBuffer)
-	int index
-	if(!gAttributeNameMap.GetValue(sBuffer, index))
-	{
-		ThrowNativeError(0, "Attribute \"%s\" doesn't exists exists", sBuffer)
-		return
-	}
-	
-	gAttributeNames.Erase(index)
-	gAttributeType.Erase(index)
-	for(int i = MaxClients;i;i--)
-		if(IsClientConnected(i))
-			gAttributeValues[i].Erase(index)
-}
-
 public void OnPluginStart()
 {
 	gAttributeNames = new ArrayList(ByteCountToCells(32))
 	gAttributeType = new ArrayList(1)
 	gAttributeNameMap = new StringMap()
-	fwOnAttributeChange = new GlobalForward("Abilities2_AttributeChanged", ET_Ignore, Param_String, Param_Cell, Param_Cell, Param_Cell) // name client oldvalue newvalue
+	fwOnAttributeChange = new GlobalForward("Abilities2_AttributeChanged", ET_Ignore, Param_String, Param_Cell, Param_Float, Param_Float) // name client oldvalue newvalue
 	
 	LoadTranslations("shop_abilities.phrases")
 }
@@ -158,13 +145,13 @@ any GetItemAttribute(ItemId item, const char[] attribute, int type)
 	return Shop_GetItemCustomInfo(item, attribute)
 }
 
-void AttrubiteChanged(const char[] name, int client, any oldValue, any newValue)
+void AttrubiteChanged(const char[] name, int client, any oldValue, any newValue, int type)
 {
 	Call_StartForward(fwOnAttributeChange)
 	Call_PushString(name)
 	Call_PushCell(client)
-	Call_PushCell(oldValue)
-	Call_PushCell(newValue)
+	Call_PushFloat(type != 2 ? oldValue : float(view_as<int>(oldValue)))
+	Call_PushFloat(type != 2 ? newValue : float(view_as<int>(newValue)))
 	Call_Finish()
 }
 
@@ -201,7 +188,7 @@ public void Shop_OnItemToggled(int client, CategoryId category_id, const char[] 
 			view_as<int>(value) += view_as<int>(oldvalue)
 			
 		gAttributeValues[client].Set(i, value)
-		AttrubiteChanged(sBuffer, client, oldvalue, value)
+		AttrubiteChanged(sBuffer, client, oldvalue, value, type)
 	}
 }
 
@@ -212,7 +199,7 @@ public bool Shop_OnItemDescription(int client, ShopMenu menu_action, CategoryId 
 	
 	char sBuffer[32]
 	char sBuffer2[48]
-	float value
+	any value
 	bool changed = false
 	int len = strlen(buffer)
 	int type
@@ -241,27 +228,9 @@ public bool Shop_OnItemDescription(int client, ShopMenu menu_action, CategoryId 
 		{
 			case 2: FormatEx(buffer[len], maxlength - len, "\n+%i %s", value, sBuffer2)
 			case 1: FormatEx(buffer[len], maxlength - len, "\n+%0.1f %s", value, sBuffer2)
-			case 0: FormatEx(buffer[len], maxlength - len, "\n+%0.1f%% %s", value*100.0, sBuffer2)
+			case 0: FormatEx(buffer[len], maxlength - len, "\n+%0.1f%% %s", view_as<float>(value)*100.0, sBuffer2)
 		}
 		len += strlen(buffer[len])
 	}
 	return changed
 }
-
-// public void Shop_OnAuthorized(int client)
-// {
-	// ArrayList items = new ArrayList(1)
-	// int size = Shop_FillArrayByItems(items)
-	// if(!size)
-		// return
-	// ItemId item
-	
-	// for(int g = items.Length-1;g!=-1;g--)
-	// {
-		// item = view_as<ItemId>(items.Get(g))
-		// if(Shop_IsClientHasItem(client, item) && Shop_IsClientItemToggled(client, item))
-		// {
-			// Shop_OnItemToggled(client, INVALID_CATEGORY, "", item, "", Toggle_On)
-		// }
-	// }
-// }

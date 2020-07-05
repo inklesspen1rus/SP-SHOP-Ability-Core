@@ -12,7 +12,7 @@
 	}
 	"health"
 	{
-		"ru"			"Здоровье"
+		"ru"			"HP"
 		"en"			"Health"
 	}
 	"armor"
@@ -20,19 +20,39 @@
 		"ru"			"Броня"
 		"en"			"Armor"
 	}
+	"reload"
+	{
+		"ru"			"Перезарядка"
+		"en"			"Reload speed"
+	}
 	"regen_hp"
 	{
-		"ru"			"Регенерация HP"
+		"ru"			"Реген HP"
 		"en"			"HP Regeneration"
 	}
 	"regen_armor"
 	{
-		"ru"			"Регенерация брони"
+		"ru"			"Реген брони"
 		"en"			"Armor Regeneration"
+	}
+	"damage"
+	{
+		"ru"			"Урон"
+		"en"			"Damage"
+	}
+	"dmgresist"
+	{
+		"ru"			"Защита"
+		"en"			"Damage resistance"
 	}
 	"credits"
 	{
 		"ru"			"Кредиты"
 		"en"			"Credits"
+	}
+	"invis"
+	{
+		"ru"			"Прозрачность"
+		"en"			"Transparency"
 	}
 }
