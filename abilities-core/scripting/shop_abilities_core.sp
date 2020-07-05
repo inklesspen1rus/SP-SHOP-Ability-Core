@@ -140,7 +140,40 @@ public void OnPluginStart()
 	
 	OnMapStart()
 	
+	RegServerCmd("sm_abilities_core_dump_items", DumpItemsCMD)
+	
 	LoadTranslations("shop_abilities.phrases")
+}
+
+public Action DumpItemsCMD(int args)
+{
+	File output
+	ItemId iid
+	CategoryId cid
+	char sBuffer[96]
+	ArrayList list
+	
+	output = OpenFile("addons/sourcemod/data/shop_items_output.ini", "w")
+	output.WriteLine("Category :: Item")
+	list = new ArrayList(1)
+	Shop_FillArrayByItems(list)
+	for(int i = list.Length-1;i!=-1;i--)
+	{
+		iid = list.Get(i)
+		cid = Shop_GetItemCategoryId(iid)
+		if(cid == INVALID_CATEGORY)
+			sBuffer[0] = 0
+		else
+			Shop_GetCategoryById(cid, sBuffer, sizeof sBuffer)
+		output.WriteString(sBuffer, false)
+		sBuffer = " :: "
+		Shop_GetItemById(iid, sBuffer[4], sizeof sBuffer - 4)
+		output.WriteLine(sBuffer)
+	}
+	
+	PrintToServer("Items successfully dumped info \"addons/sourcemod/data/shop_items_output.ini\"")
+	list.Close()
+	output.Close()
 }
 
 any GetItemAttribute(ItemId item, const char[] attribute, int type)
@@ -149,6 +182,7 @@ any GetItemAttribute(ItemId item, const char[] attribute, int type)
 	static StringMap map
 	static CategoryId cid
 	static float value
+	
 	cid = Shop_GetItemCategoryId(item)
 	if(cid != INVALID_CATEGORY)
 	{
