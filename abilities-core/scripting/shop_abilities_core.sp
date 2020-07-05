@@ -4,7 +4,7 @@ public Plugin myinfo = {
 	name = "[SHOP] Abilities Core 2",
 	author = "inklesspen",
 	description = "Fully rewrited and new-styled code abilities core",
-	version = "2.0a"
+	version = "2.1a"
 }
 
 GlobalForward fwOnAttributeChange
@@ -13,6 +13,8 @@ ArrayList gAttributeValues[MAXPLAYERS + 1]
 ArrayList gAttributeNames
 ArrayList gAttributeType
 StringMap gAttributeNameMap
+
+StringMap gCustomInfo
 /*
 percent		- 0
 float		- 1
@@ -134,12 +136,38 @@ public void OnPluginStart()
 	gAttributeType = new ArrayList(1)
 	gAttributeNameMap = new StringMap()
 	fwOnAttributeChange = new GlobalForward("Abilities2_AttributeChanged", ET_Ignore, Param_String, Param_Cell, Param_Float, Param_Float) // name client oldvalue newvalue
+	gCustomInfo = new StringMap()
+	
+	OnMapStart()
 	
 	LoadTranslations("shop_abilities.phrases")
 }
 
 any GetItemAttribute(ItemId item, const char[] attribute, int type)
 {
+	static char sBuffer[64]
+	static StringMap map
+	static CategoryId cid
+	static float value
+	cid = Shop_GetItemCategoryId(item)
+	if(cid != INVALID_CATEGORY)
+	{
+		Shop_GetCategoryById(cid, sBuffer, sizeof sBuffer)
+		if(gCustomInfo.GetValue(sBuffer, map))
+		{
+			Shop_GetItemById(item, sBuffer, sizeof sBuffer)
+			if(map.GetValue(sBuffer, map))
+			{
+				if(map.GetValue(attribute, value))
+				{
+					if(type != 2)
+						return value
+					return RoundToZero(value)
+				}
+			}
+		}
+	}
+	
 	if(type != 2)
 		return Shop_GetItemCustomInfoFloat(item, attribute)
 	return Shop_GetItemCustomInfo(item, attribute)
@@ -233,4 +261,69 @@ public bool Shop_OnItemDescription(int client, ShopMenu menu_action, CategoryId 
 		len += strlen(buffer[len])
 	}
 	return changed
+}
+
+public void OnMapStart()
+{
+	StringMap category
+	StringMap item
+	StringMapSnapshot snap
+	StringMapSnapshot subsnap
+	char sBuffer[64]
+	KeyValues kv
+	float value
+	
+	//Clear old data
+	snap = gCustomInfo.Snapshot()
+	for(int i = snap.Length-1;i!=-1;i--)
+	{
+		snap.GetKey(i, sBuffer, sizeof sBuffer)
+		gCustomInfo.GetValue(sBuffer, category)
+		subsnap = category.Snapshot()
+		for(int g = subsnap.Length-1;g!=-1;g--)
+		{
+			subsnap.GetKey(i, sBuffer, sizeof sBuffer)
+			category.GetValue(sBuffer, item)
+			item.Close()
+		}
+		subsnap.Close()
+		category.Close()
+	}
+	gCustomInfo.Clear()
+	snap.Close()
+	
+	//Russian Matryoshka
+	kv = new KeyValues("items")
+	kv.ImportFromFile("addons/sourcemod/configs/shop/custom_info.ini")
+	kv.Rewind()
+	if(kv.GotoFirstSubKey(true))
+	{
+		do	{
+			kv.GetSectionName(sBuffer, sizeof sBuffer)
+			if(kv.GotoFirstSubKey(true))
+			{
+				category = new StringMap()
+				gCustomInfo.SetValue(sBuffer, category)
+				do	{
+					kv.GetSectionName(sBuffer, sizeof sBuffer)
+					if(kv.GotoFirstSubKey(false))
+					{
+						item = new StringMap()
+						category.SetValue(sBuffer, item)
+						do	{
+							value = kv.GetFloat(NULL_STRING)
+							if(value)
+							{
+								kv.GetSectionName(sBuffer, sizeof sBuffer)
+								item.SetValue(sBuffer, value)
+							}
+						}	while(kv.GotoNextKey(false))
+						kv.GoBack()
+					}
+				}	while(kv.GotoNextKey(true))
+				kv.GoBack()
+			}
+		}	while(kv.GotoNextKey(true))
+	}
+	kv.Close()
 }
