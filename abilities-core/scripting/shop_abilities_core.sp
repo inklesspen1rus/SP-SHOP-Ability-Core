@@ -4,11 +4,12 @@ public Plugin myinfo = {
 	name = "[SHOP] Abilities Core 2",
 	author = "inklesspen",
 	description = "Fully rewrited and new-styled code abilities core",
-	version = "2.1a"
+	version = "2.2a"
 }
 
 GlobalForward fwOnAttributeChange
 
+ArrayList gPlayerItems[MAXPLAYERS + 1]
 ArrayList gAttributeValues[MAXPLAYERS + 1]
 ArrayList gAttributeNames
 ArrayList gAttributeType
@@ -125,6 +126,9 @@ public void OnClientConnected(int client)
 		return
 	if(gAttributeValues[client])
 		gAttributeValues[client].Close()
+	if(gPlayerItems[client])
+		gPlayerItems[client].Close()
+	gPlayerItems[client] = new ArrayList(1)
 	gAttributeValues[client] = new ArrayList(1)
 	for(int i = gAttributeNames.Length;i;i--)
 		gAttributeValues[client].Push(0)
@@ -219,8 +223,14 @@ void AttrubiteChanged(const char[] name, int client, any oldValue, any newValue,
 
 public void Shop_OnItemToggled(int client, CategoryId category_id, const char[] category, ItemId item_id, const char[] item, ToggleState toggle)
 {
-	if((toggle == Toggle_On) != Shop_IsClientItemToggled(client, item_id)) // WTF???
+	int pos = gPlayerItems[client].FindValue(item_id)
+	bool add = toggle == Toggle_On
+	if(pos != -1 == add)
 		return
+	if(add)
+		gPlayerItems[client].Push(item_id)
+	else
+		gPlayerItems[client].Erase(pos)
 	
 	char sBuffer[32]
 	any value
