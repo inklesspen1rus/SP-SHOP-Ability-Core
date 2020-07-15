@@ -8,7 +8,7 @@
 public Plugin myinfo = {
 	name = "[Shop Abilities] Base",
 	author = "inklesspen",
-	version = "1.2"
+	version = "1.2.1"
 }
 
 bool gECalc
@@ -62,20 +62,15 @@ public void LockImmunityAlpha(ConVar cvar, const char[] oldvalue, const char[] n
 		cvar.BoolValue = true
 }
 
-// Reset gravity for all players
-public void RoundPrestart(Event event, const char[] name, bool dbc)
-{
-	for(int i = MaxClients;i;i--)
-		if(IsClientInGame(i))
-			SetEntityGravity(i, 1.0)
-}
-
 public void PlayerSpawn(Event event, const char[] name, bool dbc)
 {
 	int userid = event.GetInt("userid")
 	int client = GetClientOfUserId(userid)
 	if(!client)
 		return
+	// Reset gravity for all players before install gravity
+	if(!gECalc) // ignore ecalc bcs ecalc doing it automaticly
+		SetEntityGravity(client, 1.0)
 	
 	if(gPlayerSpawnTimer[client])
 		KillTimer(gPlayerSpawnTimer[client])
@@ -119,8 +114,6 @@ public void OnLibraryAdded(const char[] name)
 	else if(!strcmp(name, "effectcalc"))
 	{
 		gECalc = true
-		
-		UnhookEvent("round_prestart", RoundPrestart)
 		
 		for(int i = MaxClients;i;i--)
 		{
@@ -187,7 +180,7 @@ public void OnClientPutInServer(int client)
 		if(!IsFakeClient(client))
 		{
 			SDKHook(client, SDKHook_GroundEntChangedPost, GroundEntChangedPost)
-			SDKHook(client, SDKHook_GetMaxHealth, OnGetMaxHealth)
+			SDKHookEx(client, SDKHook_GetMaxHealth, OnGetMaxHealth)
 		}
 	}
 }
@@ -212,8 +205,6 @@ public void OnLibraryRemoved(const char[] name)
 	{
 		gECalc = false
 		
-		HookEvent("round_prestart", RoundPrestart)
-		
 		for(int i = MaxClients;i;i--)
 		{
 			if(IsClientInGame(i))
@@ -222,7 +213,7 @@ public void OnLibraryRemoved(const char[] name)
 				if(!IsFakeClient(i))
 				{
 					SDKHook(i, SDKHook_GroundEntChangedPost, GroundEntChangedPost)
-					SDKHook(i, SDKHook_GetMaxHealth, OnGetMaxHealth)
+					SDKHookEx(i, SDKHook_GetMaxHealth, OnGetMaxHealth)
 				}
 			}
 		}
