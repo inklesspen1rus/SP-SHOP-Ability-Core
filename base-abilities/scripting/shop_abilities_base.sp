@@ -8,7 +8,7 @@
 public Plugin myinfo = {
 	name = "[Shop Abilities] Base",
 	author = "inklesspen",
-	version = "1.2.1"
+	version = "1.2.2"
 }
 
 bool gECalc
@@ -365,7 +365,7 @@ public Action Shop_OnCreditsGiven(int client, int &credits, int by_who)
 {
 	if(by_who == CREDITS_BY_NATIVE)
 	{
-		credits = RoundToFloor(credits * Abilities2_GetClientAttributeFloat(client, "credits") + 1.0)
+		credits = RoundToFloor(credits * (Abilities2_GetClientAttributeFloat(client, "credits") + 1.0))
 		return Plugin_Changed
 	}
 	return Plugin_Continue
