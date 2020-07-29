@@ -8,7 +8,7 @@
 public Plugin myinfo = {
 	name = "[Shop Abilities] Base",
 	author = "inklesspen",
-	version = "1.2.2"
+	version = "1.2.3"
 }
 
 bool gECalc
@@ -85,7 +85,10 @@ public Action ApplyPlayerEffects(Handle timer, int client)
 	gPlayerSpawnTimer[client] = INVALID_HANDLE
 	if(!IsFakeClient(client) && IsPlayerAlive(client))
 	{
-		SetEntProp(client, Prop_Send, "m_ArmorValue", GetClientArmor(client) + Abilities2_GetClientAttributeInt(client, "armor"))
+		int newarmor = 100 + Abilities2_GetClientAttributeInt(client, "armor")
+		if(GetClientArmor(client) < newarmor)
+			SetEntProp(client, Prop_Send, "m_ArmorValue", GetClientArmor(client) + newarmor)
+
 		if(gECalc)
 			return
 		SetEntityHealth(client, GetMaxHealth(client))
