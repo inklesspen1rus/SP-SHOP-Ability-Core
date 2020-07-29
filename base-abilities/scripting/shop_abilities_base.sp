@@ -85,29 +85,9 @@ public Action ApplyPlayerEffects(Handle timer, int client)
 	gPlayerSpawnTimer[client] = INVALID_HANDLE
 	if(!IsFakeClient(client) && IsPlayerAlive(client))
 	{
-		static int offset = 0;
-		static int maxarmor = -1; // in case installed "no hud limit" that extends max armor value
-		static int bytes = -1;
-
-		if(!offset)
-		{
-			int numbits;
-			offset = FindDataMapInfo(client, "m_ArmorValue", .num_bits = numbits);
-			if(offset != -1)
-			{
-				maxarmor = RoundToZero(Pow(2.0, float(numbits))) - 1;
-				bytes = numbits / 8;
-			}
-		}
-
-		if(offset != -1)
-		{
-			int newarmor = 100 + Abilities2_GetClientAttributeInt(client, "armor");
-			if(newarmor > maxarmor)
-				newarmor = maxarmor;
-			if(GetClientArmor(client) < newarmor)
-				SetEntData(client, offset, newarmor, bytes, true);
-		}
+		int newarmor = 100 + Abilities2_GetClientAttributeInt(client, "armor")
+		if(GetClientArmor(client) < newarmor)
+			SetEntProp(client, Prop_Send, "m_ArmorValue", GetClientArmor(client) + newarmor)
 
 		if(gECalc)
 			return
