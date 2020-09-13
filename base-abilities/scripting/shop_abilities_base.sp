@@ -8,7 +8,7 @@
 public Plugin myinfo = {
 	name = "[Shop Abilities] Base",
 	author = "inklesspen",
-	version = "1.2.3"
+	version = "1.2.4"
 }
 
 bool gECalc
@@ -40,7 +40,7 @@ public void OnPluginStart()
 	}
 	
 	offs_Alpha		= FindSendPropInfo("CBaseEntity", "m_clrRender") + 3
-	OnLibraryRemoved("effectcalc")
+	if(!LibraryExists("effectcalc"))	OnLibraryRemoved("effectcalc")
 	CreateTimer(1.0, RegenerationTimer, _, TIMER_REPEAT)
 	
 	HookEvent("player_spawn", PlayerSpawn)
@@ -172,26 +172,26 @@ void ECalc_UnhookAll()
 {
 	char sBuffer[8]
 	sBuffer = ecalc_mult_another ? "shop" : "base"
-	ECalc_Hook("damage", sBuffer, ModifyDamage, true)
-	ECalc_Hook("dmgresist", sBuffer, ModifyDMGResist, true)
-	ECalc_Hook("invis", sBuffer, ModifyInvis, true)
-	ECalc_Hook("speed", sBuffer, ModifySpeed, true)
-	ECalc_Hook("gravity", sBuffer, ModifyGravity, true)
-	ECalc_Hook("health", sBuffer, ModifyHealth, true)
-	ECalc_Hook("reload", sBuffer, ModifyReload, true)
+	ECalc_Hook2("damage", sBuffer, ModifySomething, true)
+	ECalc_Hook2("dmgresist", sBuffer, ModifySomething, true)
+	ECalc_Hook2("invis", sBuffer, ModifySomething, true)
+	ECalc_Hook2("speed", sBuffer, ModifySomething, true)
+	ECalc_Hook2("gravity", sBuffer, ModifySomething, true)
+	ECalc_Hook2("health", sBuffer, ModifySomething, true)
+	ECalc_Hook2("reload", sBuffer, ModifySomething, true)
 }
 
 void ECalc_HookAll()
 {
 	char sBuffer[8]
 	sBuffer = ecalc_mult_another ? "shop" : "base"
-	ECalc_Hook("damage", sBuffer, ModifyDamage)
-	ECalc_Hook("dmgresist", sBuffer, ModifyDMGResist)
-	ECalc_Hook("invis", sBuffer, ModifyInvis)
-	ECalc_Hook("speed", sBuffer, ModifySpeed)
-	ECalc_Hook("gravity", sBuffer, ModifyGravity)
-	ECalc_Hook("health", sBuffer, ModifyHealth)
-	ECalc_Hook("reload", sBuffer, ModifyReload)
+	ECalc_Hook2("damage", sBuffer, ModifySomething)
+	ECalc_Hook2("dmgresist", sBuffer, ModifySomething)
+	ECalc_Hook2("invis", sBuffer, ModifySomething)
+	ECalc_Hook2("speed", sBuffer, ModifySomething)
+	ECalc_Hook2("gravity", sBuffer, ModifySomething)
+	ECalc_Hook2("health", sBuffer, ModifySomething)
+	ECalc_Hook2("reload", sBuffer, ModifySomething)
 }
 
 public void OnClientPutInServer(int client)
@@ -296,11 +296,7 @@ void CalculateInvis(int client)
 {
 	SetEntityRenderMode(client, RENDER_TRANSALPHA)
 	if(gECalc)
-	{
-		int data[1]
-		data[0] = client
-		SetEntData(client, offs_Alpha, RoundToCeil(255.0/ECalc_Run2("invis", data, 1)), 1, true)
-	}
+		ECalc_Apply(client, "invis")
 	else
 		SetEntData(client, offs_Alpha, RoundToCeil(255.0/(Abilities2_GetClientAttributeFloat(client, "invis") + 1.0)), 1, true)
 }
@@ -318,12 +314,7 @@ public void Abilities2_AttributeChanged(const char[] attribute, int client, floa
 			if(!gPlayerSpawnTimer[client])
 				SetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue", GetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue") + (newvalue - oldvalue))
 		}
-		else
-		{
-			int data[1]
-			data[0] = client
-			SetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue", ECalc_Run2("speed", data, 1))
-		}
+		else	ECalc_Apply(client, "speed")
 	}
 	else if(!strcmp(attribute, "gravity"))
 	{
@@ -332,12 +323,7 @@ public void Abilities2_AttributeChanged(const char[] attribute, int client, floa
 			if(!gPlayerSpawnTimer[client])
 				SetEntityGravity(client, 1.0 / (newvalue + 1.0))
 		}
-		else
-		{
-			int data[1]
-			data[0] = client
-			SetEntityGravity(client, 1.0/ECalc_Run2("gravity", data, 1))
-		}
+		else	ECalc_Apply(client, "gravity")
 	}
 }
 
@@ -381,6 +367,7 @@ int GetMaxHealth(int client)
 {
 	if(fGetMaxHealth != INVALID_HANDLE)
 		return SDKCall(fGetMaxHealth, client)
+	if(gECalc)	return RoundToCeil(100.0 * ECalc_Run2(client, "health"))
 	return 100 + RoundToCeil(Abilities2_GetClientAttributeFloat(client, "health")*100.0)
 }
 
@@ -394,38 +381,8 @@ public Action Shop_OnCreditsGiven(int client, int &credits, int by_who)
 	return Plugin_Continue
 }
 
-public void ModifyDamage(any[] data, int size, float &value)
+public void ModifySomething(int client, float &value, const char[] effect)
 {
-	if(0 < data[1] <= MaxClients && !IsFakeClient(data[1]))
-		value += Abilities2_GetClientAttributeFloat(data[1], "damage")
-}
-public void ModifyDMGResist(any[] data, int size, float &value)
-{
-	if(0 < data[0] <= MaxClients && !IsFakeClient(data[0]))
-		value += Abilities2_GetClientAttributeFloat(data[0], "dmgresist")
-}
-public void ModifyInvis(any[] data, int size, float &value)
-{
-	if(0 < data[0] <= MaxClients && !IsFakeClient(data[0]))
-		value += Abilities2_GetClientAttributeFloat(data[0], "invis")
-}
-public void ModifySpeed(any[] data, int size, float &value)
-{
-	if(0 < data[0] <= MaxClients && !IsFakeClient(data[0]))
-		value += Abilities2_GetClientAttributeFloat(data[0], "speed")
-}
-public void ModifyGravity(any[] data, int size, float &value)
-{
-	if(0 < data[0] <= MaxClients && !IsFakeClient(data[0]))
-		value += Abilities2_GetClientAttributeFloat(data[0], "gravity")
-}
-public void ModifyHealth(any[] data, int size, float &value)
-{
-	if(0 < data[0] <= MaxClients && !IsFakeClient(data[0]))
-		value += Abilities2_GetClientAttributeFloat(data[0], "health")
-}
-public void ModifyReload(any[] data, int size, float &value)
-{
-	if(0 < data[0] <= MaxClients && !IsFakeClient(data[0]))
-		value += Abilities2_GetClientAttributeFloat(data[0], "reload")
+	if(0 < client <= MaxClients && !IsFakeClient(client))
+		value += Abilities2_GetClientAttributeFloat(client, effect)
 }
