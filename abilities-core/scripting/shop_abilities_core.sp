@@ -186,22 +186,22 @@ any GetItemAttribute(ItemId item, const char[] attribute, int type)
 	static StringMap map
 	static CategoryId cid
 	static float value
+	static int k;
 	
 	cid = Shop_GetItemCategoryId(item)
 	if(cid != INVALID_CATEGORY)
 	{
 		Shop_GetCategoryById(cid, sBuffer, sizeof sBuffer)
+		k = strlen(sBuffer);
+		sBuffer[k++] = '\n';
+		Shop_GetItemById(item, sBuffer[k], sizeof sBuffer - k);
 		if(gCustomInfo.GetValue(sBuffer, map))
 		{
-			Shop_GetItemById(item, sBuffer, sizeof sBuffer)
-			if(map.GetValue(sBuffer, map))
+			if(map.GetValue(attribute, value))
 			{
-				if(map.GetValue(attribute, value))
-				{
-					if(type != 2)
-						return value
-					return RoundToZero(value)
-				}
+				if(type != 2)
+					return value
+				return RoundToZero(value)
 			}
 		}
 	}
@@ -309,11 +309,10 @@ public bool Shop_OnItemDescription(int client, ShopMenu menu_action, CategoryId 
 
 public void OnMapStart()
 {
-	StringMap category
 	StringMap item
 	StringMapSnapshot snap
-	StringMapSnapshot subsnap
-	char sBuffer[64]
+	char sBuffer[512]
+	char sBuffer2[512]
 	KeyValues kv
 	float value
 	
@@ -321,17 +320,9 @@ public void OnMapStart()
 	snap = gCustomInfo.Snapshot()
 	for(int i = snap.Length-1;i!=-1;i--)
 	{
-		snap.GetKey(i, sBuffer, sizeof sBuffer)
-		gCustomInfo.GetValue(sBuffer, category)
-		subsnap = category.Snapshot()
-		for(int g = subsnap.Length-1;g!=-1;g--)
-		{
-			subsnap.GetKey(i, sBuffer, sizeof sBuffer)
-			category.GetValue(sBuffer, item)
-			item.Close()
-		}
-		subsnap.Close()
-		category.Close()
+		snap.GetKey(i, sBuffer, sizeof sBuffer);
+		gCustomInfo.GetValue(sBuffer, item);
+		item.Close();
 	}
 	gCustomInfo.Clear()
 	snap.Close()
@@ -342,32 +333,33 @@ public void OnMapStart()
 	kv.Rewind()
 	if(kv.GotoFirstSubKey(true))
 	{
+		int k;
 		do	{
-			kv.GetSectionName(sBuffer, sizeof sBuffer)
+			kv.GetSectionName(sBuffer, sizeof sBuffer);
+			k = strlen(sBuffer);
+			sBuffer[k++] = '\n';
 			if(kv.GotoFirstSubKey(true))
 			{
-				category = new StringMap()
-				gCustomInfo.SetValue(sBuffer, category)
 				do	{
-					kv.GetSectionName(sBuffer, sizeof sBuffer)
+					kv.GetSectionName(sBuffer[k], sizeof sBuffer - k);
+					item = new StringMap();
+					gCustomInfo.SetValue(sBuffer, item);
 					if(kv.GotoFirstSubKey(false))
 					{
-						item = new StringMap()
-						category.SetValue(sBuffer, item)
 						do	{
-							value = kv.GetFloat(NULL_STRING)
-							if(value)
-							{
-								kv.GetSectionName(sBuffer, sizeof sBuffer)
-								item.SetValue(sBuffer, value)
-							}
-						}	while(kv.GotoNextKey(false))
-						kv.GoBack()
+							kv.GetSectionName(sBuffer2, sizeof sBuffer2);
+							value = kv.GetFloat(NULL_STRING);
+							if(value)	item.SetValue(sBuffer2, value);
+						}
+						while(kv.GotoNextKey(false))
+						kv.GoBack();
 					}
-				}	while(kv.GotoNextKey(true))
-				kv.GoBack()
+				}
+				while(kv.GotoNextKey(true))
+				kv.GoBack();
 			}
-		}	while(kv.GotoNextKey(true))
+		}
+		while(kv.GotoNextKey(true))
 	}
 	kv.Close()
 }
