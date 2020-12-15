@@ -8,12 +8,15 @@
 public Plugin myinfo = {
 	name = "[Shop Abilities] Base",
 	author = "inklesspen",
-	version = "1.2.4"
+	version = "1.2.5"
 }
 
 bool gECalc
 int offs_Alpha
 Handle gPlayerSpawnTimer[MAXPLAYERS + 1]
+
+Handle gHPRegenTimer;
+Handle gAPRegenTimer;
 
 Handle fGetMaxHealth
 
@@ -41,12 +44,32 @@ public void OnPluginStart()
 	
 	offs_Alpha		= FindSendPropInfo("CBaseEntity", "m_clrRender") + 3
 	if(!LibraryExists("effectcalc"))	OnLibraryRemoved("effectcalc")
-	CreateTimer(1.0, RegenerationTimer, _, TIMER_REPEAT)
 	
 	HookEvent("player_spawn", PlayerSpawn)
 	
 	CreateConVar("cvar_ecalc_mult", "0", "Use another multiplier for Effect Calculator (it will multiple effects, not sum)", _, true, 0.0, true, 1.0).AddChangeHook(UpdateECalcMult)
+	
+	cvar = CreateConVar("cvar_ecalc_hpregen_timer", "1.0", "Use another multiplier for Effect Calculator (it will multiple effects, not sum)", _, true, 0.0, true, 1.0)
+	cvar.AddChangeHook(UpdateHPRegenTimer)
+	UpdateHPRegenTimer(cvar, "", "");
+
+	cvar = CreateConVar("cvar_ecalc_apregen_timer", "1.0", "Use another multiplier for Effect Calculator (it will multiple effects, not sum)", _, true, 0.0, true, 1.0)
+	cvar.AddChangeHook(UpdateAPRegenTimer)
+	UpdateAPRegenTimer(cvar, "", "");
+
 	AutoExecConfig(true, "abilities_base", "shop")
+}
+
+public void UpdateHPRegenTimer(ConVar cvar, const char[] oldvalue, const char[] newvalue)
+{
+	if(gHPRegenTimer)	KillTimer(gHPRegenTimer);
+	gHPRegenTimer = CreateTimer(cvar.FloatValue, HPRegenTimer, _, TIMER_REPEAT);
+}
+
+public void UpdateAPRegenTimer(ConVar cvar, const char[] oldvalue, const char[] newvalue)
+{
+	if(gAPRegenTimer)	KillTimer(gAPRegenTimer);
+	gAPRegenTimer = CreateTimer(cvar.FloatValue, APRegenTimer, _, TIMER_REPEAT);
 }
 
 public void UpdateECalcMult(ConVar cvar, const char[] oldvalue, const char[] newvalue)
@@ -327,7 +350,7 @@ public void Abilities2_AttributeChanged(const char[] attribute, int client, floa
 	}
 }
 
-public Action RegenerationTimer(Handle timer)
+public Action HPRegenTimer(Handle timer)
 {
 	int cur
 	int max
@@ -347,7 +370,19 @@ public Action RegenerationTimer(Handle timer)
 					SetEntityHealth(i, (cur > max) ? max : cur)
 				}
 			}
-			
+		}
+	}
+}
+
+public Action APRegenTimer(Handle timer)
+{
+	int cur
+	int max
+	int regen
+	for(int i = MaxClients;i;i--)
+	{
+		if(IsClientInGame(i) && IsPlayerAlive(i) && !IsFakeClient(i) && !gPlayerSpawnTimer[i])
+		{
 			regen = Abilities2_GetClientAttributeInt(i, "regen_armor")
 			if(regen)
 			{
