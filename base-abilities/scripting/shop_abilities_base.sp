@@ -49,11 +49,11 @@ public void OnPluginStart()
 	
 	CreateConVar("cvar_ecalc_mult", "0", "Use another multiplier for Effect Calculator (it will multiple effects, not sum)", _, true, 0.0, true, 1.0).AddChangeHook(UpdateECalcMult)
 	
-	cvar = CreateConVar("cvar_ecalc_hpregen_timer", "1.0", "Use another multiplier for Effect Calculator (it will multiple effects, not sum)", _, true, 0.0, true, 1.0)
+	cvar = CreateConVar("cvar_ecalc_hpregen_timer", "1.0", "Use another multiplier for Effect Calculator (it will multiple effects, not sum)")
 	cvar.AddChangeHook(UpdateHPRegenTimer)
 	UpdateHPRegenTimer(cvar, "", "");
 
-	cvar = CreateConVar("cvar_ecalc_apregen_timer", "1.0", "Use another multiplier for Effect Calculator (it will multiple effects, not sum)", _, true, 0.0, true, 1.0)
+	cvar = CreateConVar("cvar_ecalc_apregen_timer", "1.0", "Use another multiplier for Effect Calculator (it will multiple effects, not sum)")
 	cvar.AddChangeHook(UpdateAPRegenTimer)
 	UpdateAPRegenTimer(cvar, "", "");
 
