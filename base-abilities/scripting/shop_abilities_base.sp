@@ -17,6 +17,7 @@ Handle gPlayerSpawnTimer[MAXPLAYERS + 1]
 
 Handle gHPRegenTimer;
 Handle gAPRegenTimer;
+bool gEffectCredits;
 
 Handle fGetMaxHealth
 
@@ -57,6 +58,10 @@ public void OnPluginStart()
 	cvar.AddChangeHook(UpdateAPRegenTimer)
 	UpdateAPRegenTimer(cvar, "", "");
 
+	cvar = CreateConVar("shop_abilities_base_credits", "1", "Use credits ability");
+	cvar.AddChangeHook(UpdateBaseCredits)
+	UpdateBaseCredits(cvar, "", "");
+
 	AutoExecConfig(true, "abilities_base", "shop")
 }
 
@@ -64,6 +69,11 @@ public void UpdateHPRegenTimer(ConVar cvar, const char[] oldvalue, const char[] 
 {
 	if(gHPRegenTimer)	KillTimer(gHPRegenTimer);
 	gHPRegenTimer = CreateTimer(cvar.FloatValue, HPRegenTimer, _, TIMER_REPEAT);
+}
+
+public void UpdateBaseCredits(ConVar cvar, const char[] oldvalue, const char[] newvalue)
+{
+	gEffectCredits = cvar.BoolValue;
 }
 
 public void UpdateAPRegenTimer(ConVar cvar, const char[] oldvalue, const char[] newvalue)
@@ -408,7 +418,7 @@ int GetMaxHealth(int client)
 
 public Action Shop_OnCreditsGiven(int client, int &credits, int by_who)
 {
-	if(by_who == CREDITS_BY_NATIVE)
+	if(gEffectCredits && by_who == CREDITS_BY_NATIVE)
 	{
 		credits = RoundToFloor(float(credits) * (Abilities2_GetClientAttributeFloat(client, "credits") + 1.0))
 		return Plugin_Changed
