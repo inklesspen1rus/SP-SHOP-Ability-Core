@@ -4,7 +4,7 @@ public Plugin myinfo = {
 	name = "[SHOP] Abilities Core 2",
 	author = "inklesspen",
 	description = "Fully rewrited and new-styled code abilities core",
-	version = "2.2a"
+	version = "2.2.1"
 }
 
 GlobalForward fwOnAttributeChange
@@ -183,20 +183,25 @@ public Action DumpItemsCMD(int args)
 any GetItemAttribute(ItemId item, const char[] attribute, int type)
 {
 	static char sBuffer[64]
-	static StringMap map
-	static CategoryId cid
-	static float value
-	static int k;
+	StringMap map
+	CategoryId cid
+	float value
+	int k;
 	
 	cid = Shop_GetItemCategoryId(item)
 	if(cid != INVALID_CATEGORY)
 	{
 		Shop_GetCategoryById(cid, sBuffer, sizeof sBuffer)
 		k = strlen(sBuffer);
+		StringToLower(sBuffer);
 		sBuffer[k++] = '\n';
 		Shop_GetItemById(item, sBuffer[k], sizeof sBuffer - k);
+		StringToLower(sBuffer[k]);
 		if(gCustomInfo.GetValue(sBuffer, map))
 		{
+			char buffer[32];
+			strcopy(buffer, sizeof buffer, attribute);
+			StringToLower(buffer);
 			if(map.GetValue(attribute, value))
 			{
 				if(type != 2)
@@ -336,18 +341,21 @@ public void OnMapStart()
 		int k;
 		do	{
 			kv.GetSectionName(sBuffer, sizeof sBuffer);
+			StringToLower(sBuffer);
 			k = strlen(sBuffer);
 			sBuffer[k++] = '\n';
 			if(kv.GotoFirstSubKey(true))
 			{
 				do	{
 					kv.GetSectionName(sBuffer[k], sizeof sBuffer - k);
+					StringToLower(sBuffer[k]);
 					item = new StringMap();
 					gCustomInfo.SetValue(sBuffer, item);
 					if(kv.GotoFirstSubKey(false))
 					{
 						do	{
 							kv.GetSectionName(sBuffer2, sizeof sBuffer2);
+							StringToLower(sBuffer2);
 							value = kv.GetFloat(NULL_STRING);
 							if(value)	item.SetValue(sBuffer2, value);
 						}
@@ -362,4 +370,13 @@ public void OnMapStart()
 		while(kv.GotoNextKey(true))
 	}
 	kv.Close()
+}
+
+void StringToLower(char[] buffer)
+{
+	for(int i = 0; buffer[i]; ++i)
+	{
+		if(IsCharUpper(buffer[i]))
+		buffer[i] = CharToLower(buffer[i]);
+	}
 }
