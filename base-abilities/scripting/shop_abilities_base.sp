@@ -99,7 +99,7 @@ public void PlayerSpawn(Event event, const char[] name, bool dbc)
 {
 	int userid = event.GetInt("userid")
 	int client = GetClientOfUserId(userid)
-	if(!client)
+	if(!client || !IsClientInGame(client))
 		return
 	// Reset gravity for all players before install gravity
 	if(!gECalc) // ignore ecalc bcs ecalc doing it automaticly
