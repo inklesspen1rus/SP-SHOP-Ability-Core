@@ -164,8 +164,11 @@ enum struct Player
 
 Player gPlayers[MAXPLAYERS + 1];
 
+bool gLate;
+
 public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int max)
 {
+	gLate = late;
 	RegPluginLibrary("abilities2")
 	
 	CreateNative("Abilities2_FindAttributeByName", Native_ByName);
@@ -360,6 +363,29 @@ public void OnPluginStart()
 	RegServerCmd("sm_abilities_core_dump_items", DumpItemsCMD)
 	
 	LoadTranslations("shop_abilities.phrases")
+	if(gLate)
+	{
+		ArrayList list = new ArrayList(1);
+		Shop_FillArrayByItems(list);
+		int size = list.Length;
+
+		ItemId id;
+
+		for(int d = 0; d < size; ++d)
+		{
+			id = list.Get(d);
+
+			for(int i = MaxClients; i; --i)
+			{
+				if(IsClientInGame(i) && !IsFakeClient(i) && Shop_IsAuthorized(i) && Shop_IsClientItemToggled(i, id))
+				{
+					gPlayers[i].SwitchItem(id, false);
+				}
+			}
+		}
+
+		list.Close();
+	}
 }
 
 public Action DumpItemsCMD(int args)
@@ -557,17 +583,7 @@ public bool Shop_OnItemDescription(int client, ShopMenu menu_action, CategoryId 
 	return changed
 }
 
-stock static void _ProcessAttribute(KeyValues kv, StringMap themap)
-{
-	char sBuffer[32];
-	if(kv.GetSectionName(sBuffer, sizeof sBuffer))
-	{
-		StringToLower(sBuffer);
-		themap.SetValue(sBuffer, kv.GetFloat(NULL_STRING, 0.0));
-	}
-}
-
-stock static void _ProcessItem(KeyValues kv, char[] buffer, int max, int cur)
+static void _ProcessItem(KeyValues kv, char[] buffer, int max, int cur)
 {
 	if(!kv.GetSectionName(buffer[cur], max - cur))
 		return;
@@ -583,14 +599,19 @@ stock static void _ProcessItem(KeyValues kv, char[] buffer, int max, int cur)
 
 		do
 		{
-			_ProcessAttribute(kv, themap);
+			char sBuffer[32];
+			if(kv.GetSectionName(sBuffer, sizeof sBuffer))
+			{
+				StringToLower(sBuffer);
+				themap.SetValue(sBuffer, kv.GetFloat(NULL_STRING, 0.0));
+			}
 		}
-		while(kv.GotoNextKey(true));
+		while(kv.GotoNextKey(false));
 		kv.GoBack();
 	}
 }
 
-stock static void _ProcessCategory(KeyValues kv)
+static void _ProcessCategory(KeyValues kv)
 {
 	char sBuffer[128];
 	if(!kv.GetSectionName(sBuffer, sizeof sBuffer))
