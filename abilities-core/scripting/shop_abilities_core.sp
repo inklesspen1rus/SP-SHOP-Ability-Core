@@ -355,7 +355,7 @@ public void OnPluginStart()
 	gAttributeType = new ArrayList(1)
 	gAttributeNameMap = new StringMap()
 	fwOnAttributeChange = new GlobalForward("Abilities2_AttributeChanged", ET_Ignore, Param_String, Param_Cell, Param_Float, Param_Float) // name client oldvalue newvalue
-	fwOnAttributeBlock = new GlobalForward("Abilities2_OnCheckEnable", ET_Ignore, Param_Cell, Param_Cell) // name client oldvalue newvalue
+	fwOnAttributeBlock = new GlobalForward("Abilities2_OnCheckEnable", ET_Hook, Param_Cell, Param_Cell) // name client oldvalue newvalue
 	gCustomInfo = new StringMap()
 	
 	OnMapStart()
