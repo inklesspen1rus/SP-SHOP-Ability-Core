@@ -59,19 +59,19 @@ native void Abilities2_UpdatePlayer(int client, bool recalculate = false);
 
 // Use this bcs of calculating issues with "any" type
 // float Abilities2_GetClientAttributeFloat(int client, const char[] attribute);
-#define Abilities2_GetClientAttributeFloat(%1,%2); view_as<float>(Abilities2_GetClientAttribute(%1,%2));
+#define Abilities2_GetClientAttributeFloat(%1,%2) view_as<float>(Abilities2_GetClientAttribute(%1,%2))
 
 // Use this bcs of calculating issues with "any" type
 // float Abilities2_GetClientAttributeInt(int client, const char[] attribute);
-#define Abilities2_GetClientAttributeInt(%1,%2); view_as<int>(Abilities2_GetClientAttribute(%1,%2));
+#define Abilities2_GetClientAttributeInt(%1,%2) view_as<int>(Abilities2_GetClientAttribute(%1,%2))
 
 // Use this bcs of calculating issues with "any" type
 // float Abilities2_GetClientAttributeExFloat(int client, int index);
-#define Abilities2_GetClientAttributeExFloat(%1,%2); view_as<float>(Abilities2_GetClientAttributeEx(%1,%2));
+#define Abilities2_GetClientAttributeExFloat(%1,%2); view_as<float>(Abilities2_GetClientAttributeEx(%1,%2))
 
 // Use this bcs of calculating issues with "any" type
 // float Abilities2_GetClientAttributeExInt(int client, int index);
-#define Abilities2_GetClientAttributeExInt(%1,%2); view_as<int>(Abilities2_GetClientAttributeEx(%1,%2));
+#define Abilities2_GetClientAttributeExInt(%1,%2) view_as<int>(Abilities2_GetClientAttributeEx(%1,%2))
 
 public SharedPlugin __pl_abilities2 = 
 {
