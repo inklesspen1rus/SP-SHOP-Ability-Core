@@ -7,7 +7,7 @@ public Plugin myinfo = {
 	name = "[SHOP] Abilities Core 2",
 	author = "inklesspen",
 	description = "Fully rewrited and new-styled code abilities core",
-	version = "2.3"
+	version = "2.3.2"
 }
 
 GlobalForward fwOnAttributeChange;
@@ -63,10 +63,7 @@ enum struct Player
 		any oldvalue = this.ValueAPI(attribute_id);
 		this.values.Set(attribute_id, value);
 		value = this.ValueAPI(attribute_id);
-		if(oldvalue != value)
-		{
-			this.ChangeNotice(attribute_id, oldvalue, value);
-		}
+		this.ChangeNotice(attribute_id, oldvalue, value);
 	}
 
 	void RegisterNewAttribute(int index, any value)
@@ -184,6 +181,11 @@ public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int max)
 public any Native_Count(Handle plugin, int num)
 {
 	return gAttributeNames.Length;
+}
+
+public void Shop_OnAuthorized(int client)
+{
+	if(!IsFakeClient(client))	gPlayers[client].UpdateData();
 }
 
 public any Native_GetName(Handle plugin, int num)
