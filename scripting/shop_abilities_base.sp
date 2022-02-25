@@ -12,7 +12,7 @@
 public Plugin myinfo = {
 	name = "[Shop Abilities] Base",
 	author = "inklesspen",
-	version = "1.2.6"
+	version = "1.2.7"
 }
 
 bool gECalc;
@@ -301,7 +301,7 @@ public Action OnGetMaxHealth(int entity, int& maxhealth)
 public void WeaponReloadPost(int weapon, bool success)
 {
 	int owner = GetEntPropEnt(weapon, Prop_Send, "m_hOwner");
-	if(owner == -1)
+	if(owner == -1 || IsFakeClient(owner))
 		return;
 	
 	float value = Abilities2_GetClientAttributeFloat(owner, "reload");
