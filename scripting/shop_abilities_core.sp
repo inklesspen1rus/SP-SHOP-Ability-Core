@@ -10,7 +10,7 @@ public Plugin myinfo = {
 	name = "[SHOP] Abilities Core 2",
 	author = "inklesspen",
 	description = "Fully rewrited and new-styled code abilities core",
-	version = "2.3.3"
+	version = "2.3.4"
 }
 
 GlobalForward fwOnAttributeChange;
@@ -468,9 +468,9 @@ StringMap GetItemMapOverride(ItemId item)
 	{
 		Shop_GetCategoryById(cid, sBuffer, sizeof sBuffer);
 		k = strlen(sBuffer);
-		StringToLower(sBuffer);
 		sBuffer[k++] = '\n';
 		Shop_GetItemById(item, sBuffer[k], sizeof sBuffer - k);
+		StringToLower(sBuffer);
 		gCustomInfo.GetValue(sBuffer, map);
 	}
 	return map;
